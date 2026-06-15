@@ -12,6 +12,7 @@ try:
 except ImportError:
     PYTUBE_AVAILABLE = False
 
+# Character vocabulary for manual CTC mapping decoding
 CHAR_STR = " abcdefghijklmnopqrstuvwxyz'"
 vocab = list(CHAR_STR)
 
@@ -21,6 +22,7 @@ st.caption("Pure TensorFlow Speech Recognition Pipeline")
 
 @st.cache_resource
 def initialize_tf_pipeline():
+    """Builds a lightweight 2D CNN + Bidirectional GRU model structure."""
     input_dim = 129 
     output_dim = len(vocab) + 1 
     
@@ -39,6 +41,7 @@ def initialize_tf_pipeline():
 model = initialize_tf_pipeline()
 
 def extract_audio_features(wav_path):
+    """Loads a WAV file and returns log-spectrogram features using native TF ops."""
     file_contents = tf.io.read_file(wav_path)
     audio, sample_rate = tf.audio.decode_wav(file_contents, desired_channels=1)
     audio = tf.squeeze(audio, axis=-1)
@@ -57,6 +60,7 @@ def extract_audio_features(wav_path):
     return normalized_spec, audio.numpy()
 
 def run_asr_inference(spectrogram_features):
+    """Decodes model logit outputs into text sequences via a greedy CTC configuration."""
     input_tensor = tf.expand_dims(spectrogram_features, axis=0)
     logits = model(input_tensor)
     
@@ -92,6 +96,7 @@ def run_asr_inference(spectrogram_features):
     return raw_text
 
 def download_youtube_audio(url):
+    """Downloads audio track via pytubefix directly."""
     if not PYTUBE_AVAILABLE:
         raise ImportError("Pytube/Pytubefix library dependency error encountered.")
     
@@ -107,7 +112,7 @@ def download_youtube_audio(url):
     os.rename(out_file, wav_target)
     return wav_target
 
-# --- UI INTERFACE ---
+# --- STREAMLIT UI VIEW ---
 source_type = st.radio("Select Input Media Source Type:", ["YouTube URL", "Upload Local File (WAV, MP3, MP4)"])
 media_path = None
 audio_wav_path = None
@@ -189,3 +194,22 @@ if media_path and st.button("🚀 Convert to Text", use_container_width=True):
             if os.path.exists(p):
                 try: os.remove(p)
                 except Exception: pass
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
